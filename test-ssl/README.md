@@ -11,3 +11,9 @@ export CITY=Chicago
 export PASSWORD=secret
 bash ./kafka-generate-ssl-automatic.sh
 ```
+
+ jkstopem.sh : 
+
+ ```
+./jkstopem.sh . kafka.keystore.jks secret alias .
+ ```
