@@ -1,5 +1,4 @@
-import ssl
-from kafka import KafkaConsumer, KafkaProducer
+from kafka import KafkaConsumer
 
 kafka_brokers='localhost:19093,localhost:29093,localhost:39093'
 ca_root_location='CARoot.pem'
@@ -8,14 +7,10 @@ key_location='key.pem'
 topic='test'
 password='secret'
 
-# context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-# context.load_verify_locations('snakeoil-ca-1.crt')
-
 consumer = KafkaConsumer(
     topic,
     bootstrap_servers=kafka_brokers,
     #group_id='consumer-id',
-    #ssl_context=context,
     security_protocol='SASL_SSL',
     sasl_mechanism="SCRAM-SHA-256",
     sasl_plain_username='test',

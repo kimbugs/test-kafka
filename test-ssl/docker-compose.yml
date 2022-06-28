@@ -11,8 +11,6 @@ services:
                         cub zk-ready localhost:22181 120 && \
                         cub zk-ready localhost:32181 120 && \
                         cub zk-ready localhost:42181 120 && \
-                        kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name metricsreporter && \
-                        kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name kafkaclient && \
                         kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name kafkabroker '"
     environment:
       KAFKA_BROKER_ID: ignored
@@ -126,18 +124,11 @@ services:
       KAFKA_ZOOKEEPER_SASL_ENABLED: "true"
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
-      KAFKA_SUPER_USERS: User:metricsreporter;User:kafkabroker;User:kafkaclient
+      KAFKA_SUPER_USERS: User:kafkabroker;
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_OPTS: -Dzookeeper.sasl.client=true
         -Dzookeeper.sasl.clientconfig=Client
         -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
-      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
       - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
@@ -176,13 +167,6 @@ services:
       KAFKA_OPTS: -Dzookeeper.sasl.client=true
         -Dzookeeper.sasl.clientconfig=Client
         -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
-      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
       - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
@@ -221,13 +205,6 @@ services:
       KAFKA_OPTS: -Dzookeeper.sasl.client=true
         -Dzookeeper.sasl.clientconfig=Client
         -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
-      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
-      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
-      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
       - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
