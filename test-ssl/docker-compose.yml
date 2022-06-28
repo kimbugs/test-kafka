@@ -1,7 +1,30 @@
-version: '2'
+version: '3.5'
 services:
+  zookeeper-add-kafka-users:
+    image: confluentinc/cp-kafka:5.0.1
+    container_name: "zookeeper-add-kafka-users"
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    command: "bash -c 'echo Waiting for Zookeeper to be ready... && \
+                        cub zk-ready localhost:22181 120 && \
+                        cub zk-ready localhost:32181 120 && \
+                        cub zk-ready localhost:42181 120 && \
+                        kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name metricsreporter && \
+                        kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name kafkaclient && \
+                        kafka-configs --zookeeper localhost:22181 --alter --add-config 'SCRAM-SHA-256=[iterations=4096,password=password]' --entity-type users --entity-name kafkabroker '"
+    environment:
+      KAFKA_BROKER_ID: ignored
+      KAFKA_ZOOKEEPER_CONNECT: ignored
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_client_jaas.conf
+    network_mode: host
+    volumes:
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets/zookeeper_client_jaas.conf:/etc/kafka/secrets/zookeeper_client_jaas.conf
+
   zookeeper-1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.0.1
+    container_name: zookeeper-1
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 22181
@@ -9,12 +32,24 @@ services:
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: localhost:22888:23888;localhost:32888:33888;localhost:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_server_jaas.conf
+                  -Dquorum.auth.enableSasl=true
+                  -Dquorum.auth.learnerRequireSasl=true
+                  -Dquorum.auth.serverRequireSasl=true
+                  -Dquorum.cnxn.threads.size=20
+                  -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                  -Dzookeeper.authProvider.2=org.apache.zookeeper.server.auth.DigestAuthenticationProvider
+                  -DjaasLoginRenew=3600000
+                  -DrequireClientAuthScheme=sasl
+                  -Dquorum.auth.learner.loginContext=QuorumLearner
+                  -Dquorum.auth.server.loginContext=QuorumServer
     network_mode: host
-    extra_hosts:
-      - "moby:127.0.0.1"
+    volumes:
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets/zookeeper_server_jaas.conf:/etc/kafka/secrets/zookeeper_server_jaas.conf
 
   zookeeper-2:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.0.1
+    container_name: zookeeper-2
     environment:
       ZOOKEEPER_SERVER_ID: 2
       ZOOKEEPER_CLIENT_PORT: 32181
@@ -22,12 +57,24 @@ services:
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: localhost:22888:23888;localhost:32888:33888;localhost:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_server_jaas.conf
+                -Dquorum.auth.enableSasl=true
+                -Dquorum.auth.learnerRequireSasl=true
+                -Dquorum.auth.serverRequireSasl=true
+                -Dquorum.cnxn.threads.size=20
+                -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                -Dzookeeper.authProvider.2=org.apache.zookeeper.server.auth.DigestAuthenticationProvider
+                -DjaasLoginRenew=3600000
+                -DrequireClientAuthScheme=sasl
+                -Dquorum.auth.learner.loginContext=QuorumLearner
+                -Dquorum.auth.server.loginContext=QuorumServer
     network_mode: host
-    extra_hosts:
-      - "moby:127.0.0.1"
+    volumes:
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets/zookeeper_server_jaas.conf:/etc/kafka/secrets/zookeeper_server_jaas.conf
 
   zookeeper-3:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.0.1
+    container_name: zookeeper-3
     environment:
       ZOOKEEPER_SERVER_ID: 3
       ZOOKEEPER_CLIENT_PORT: 42181
@@ -35,13 +82,25 @@ services:
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
       ZOOKEEPER_SERVERS: localhost:22888:23888;localhost:32888:33888;localhost:42888:43888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_server_jaas.conf
+                -Dquorum.auth.enableSasl=true
+                -Dquorum.auth.learnerRequireSasl=true
+                -Dquorum.auth.serverRequireSasl=true
+                -Dquorum.cnxn.threads.size=20
+                -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                -Dzookeeper.authProvider.2=org.apache.zookeeper.server.auth.DigestAuthenticationProvider
+                -DjaasLoginRenew=3600000
+                -DrequireClientAuthScheme=sasl
+                -Dquorum.auth.learner.loginContext=QuorumLearner
+                -Dquorum.auth.server.loginContext=QuorumServer
     network_mode: host
-    extra_hosts:
-      - "moby:127.0.0.1"
+    volumes:
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets/zookeeper_server_jaas.conf:/etc/kafka/secrets/zookeeper_server_jaas.conf
 
   kafka-ssl-1:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.0.1
     network_mode: host
+    container_name: kafka-ssl-1
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -49,7 +108,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: localhost:22181,localhost:32181,localhost:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:19091,SSL://localhost:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:19091,SSL://localhost:19092,SASL_SSL://localhost:19093
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: creds
       KAFKA_SSL_KEY_CREDENTIALS: creds
@@ -58,14 +117,35 @@ services:
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
       KAFKA_SSL_ENABLED_PROTOCOLS: TLSv1.2
       KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_RETENTION_MINUTES: 172800
+      KAFKA_ZOOKEEPER_SASL_ENABLED: "true"
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:metricsreporter;User:kafkabroker;User:kafkaclient
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_OPTS: -Dzookeeper.sasl.client=true
+        -Dzookeeper.sasl.clientconfig=Client
+        -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
-    extra_hosts:
-      - "moby:127.0.0.1"
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
 
   kafka-ssl-2:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.0.1
     network_mode: host
+    container_name: kafka-ssl-2
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -73,7 +153,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: localhost:22181,localhost:32181,localhost:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29091,SSL://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29091,SSL://localhost:29092,SASL_SSL://localhost:29093
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: creds
       KAFKA_SSL_KEY_CREDENTIALS: creds
@@ -82,14 +162,35 @@ services:
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
       KAFKA_SSL_ENABLED_PROTOCOLS: TLSv1.2
       KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_RETENTION_MINUTES: 172800
+      KAFKA_ZOOKEEPER_SASL_ENABLED: "true"
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:metricsreporter;User:kafkabroker;User:kafkaclient
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_OPTS: -Dzookeeper.sasl.client=true
+        -Dzookeeper.sasl.clientconfig=Client
+        -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
-    extra_hosts:
-      - "moby:127.0.0.1"
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
 
   kafka-ssl-3:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.0.1
     network_mode: host
+    container_name: kafka-ssl-3
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -97,7 +198,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: localhost:22181,localhost:32181,localhost:42181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:39091,SSL://localhost:39092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:39091,SSL://localhost:39092,SASL_SSL://localhost:39093
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: creds
       KAFKA_SSL_KEY_CREDENTIALS: creds
@@ -106,7 +207,27 @@ services:
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
       KAFKA_SSL_ENABLED_PROTOCOLS: TLSv1.2
       KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_RETENTION_MINUTES: 172800
+      KAFKA_ZOOKEEPER_SASL_ENABLED: "true"
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SUPER_USERS: User:metricsreporter;User:kafkabroker;User:kafkaclient
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_OPTS: -Dzookeeper.sasl.client=true
+        -Dzookeeper.sasl.clientconfig=Client
+        -Djava.security.auth.login.config=/etc/kafka/secrets/conf/kafka_server_jaas.conf
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: secret
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:19093,localhost:29093,localhost:39093
     volumes:
       - /home/kimbugs/test-kafka/test-ssl/secrets:/etc/kafka/secrets
-    extra_hosts:
-      - "moby:127.0.0.1"
+      - /home/kimbugs/test-kafka/test-ssl/sasl-secrets:/etc/kafka/secrets/conf
